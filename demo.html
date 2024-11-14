@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>唤起CA互认签章客户端</title>
+  <script>
+    function CAShareDetectInstallTool() { }
+    let CAShareDetectInstallToolSocket = null
+    CAShareDetectInstallTool.start = function (message) {
+      startClinetProgram(message)
+      //  启动客户端程序
+      function startClinetProgram(message) {
+        console.log(CAShareDetectInstallToolSocket);
+
+        // socket未连接CA互认检测安装工具，则主动唤起CA互认检测安装工具
+        if (CAShareDetectInstallToolSocket === null || CAShareDetectInstallToolSocket.readyState !== 1) {
+          window.location.href = 'CAShareDetectInstallTool://websocket?flag=0'
+          initSocket()
+        } else {
+          // socket已连接CA互认检测安装工具，则使用socket向CA互认检测安装工具发送数据
+          CAShareDetectInstallToolSocket.send(JSON.stringify(message))
+        }
+      }
+      // 第一次加载脚本，主动连接CA互认检测安装工具
+      function initSocket() {
+        // 创建WebSocket连接
+        // CAShareDetectInstallToolSocket = new WebSocket('ws://localhost:12345') //检测客户端程序，socket固定地址
+        CAShareDetectInstallToolSocket = new WebSocket('wss://127.0.0.1:12346') //检测客户端程序，socket固定地址
+        // 连接打开时的处理函数
+        CAShareDetectInstallToolSocket.onopen = function (event) {
+          console.log('WebSocket is open now.')
+          CAShareDetectInstallToolSocket.send(JSON.stringify(message))
+        }
+        // 接收到消息时的处理函数
+        CAShareDetectInstallToolSocket.onmessage = function (event) {
+          console.log('Received data from server: ', event.data)
+        }
+        // 连接关闭时的处理函数
+        CAShareDetectInstallToolSocket.onclose = function (event) {
+          setTimeout(function () {
+            initSocket()
+          }, 1000)
+          console.log('WebSocket is closed now.')
+        }
+        // 连接出错时的处理函数
+        CAShareDetectInstallToolSocket.onerror = function (error) {
+          console.error('WebSocket Error: ', error)
+        }
+      }
+    }
+  </script>
+  <style>
+    h4 {
+      background-color: rgb(148, 240, 240);
+    }
+
+    .form-item {
+      margin: 6px 0;
+    }
+
+    .form-item .form-item-label {
+      display: inline-block;
+      width: 300px;
+    }
+
+    .form-item input[type="checkbox"] {
+      margin-right: 16px;
+    }
+
+    .form-item input[type="text"] {
+      width: 500px;
+      height: 30px;
+    }
+
+    #startCAShareSignatureClient {
+      width: 200px;
+      height: 50px;
+      font-weight: bold;
+      margin: 6px 0;
+    }
+
+    /*模态框主体样式*/
+    .modal {
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      display: none;
+    }
+
+    /*模态框公共样式*/
+    .modal-content {
+      background-color: #17eca5;
+      color: #fff;
+      margin: 50px auto 0;
+      padding: 20px;
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+      animation: modal-show 0.3s;
+    }
+
+    /* 正常大小 */
+    .modal-normal {
+      width: 600px;
+    }
+
+    /* 中等大小 */
+    .modal-medium {
+      width: 400px;
+    }
+
+    /* 迷你大小 */
+    .modal-mini {
+      width: 250px;
+    }
+
+    /* 隐藏 */
+    .modal-hide {
+      animation: modal-hide 0.3s;
+    }
+
+    /* 展示动画 */
+    @keyframes modal-show {
+      from {
+        opacity: 0;
+        transform: translateY(-50px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* 隐藏动画 */
+    @keyframes modal-hide {
+      from {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      to {
+        opacity: 0;
+        transform: translateY(-50px);
+      }
+    }
+  </style>
+</head>
+
+<body id="app">
+  <div id="modal" class="modal">
+    <div class="modal-content modal-normal">
+      <h2>数据已发送到客户端</h2>
+    </div>
+  </div>
+  <h4>签章文件配置</h4>
+  <div class="form-item">
+    <span class="form-item-label">待签章文件路径: </span>
+    <input id="awaitingSignatureFilePath" class="iptElement" type="text" placeholder="请输入待签章文件路径，如：C:/1.pdf"
+      value="D:/1.pdf">
+  </div>
+  <div class="form-item">
+    <span class="form-item-label">待签章文件名称：</span>
+    <input id="awaitingSignatureFileName" class="iptElement" type="text" placeholder="请输入待签章文件名称，如：1.pdf" value="1.pdf">
+  </div>
+  <div class="form-item">
+    <span class="form-item-label">待签章文件类型：</span>
+    <input id="awaitingSignatureFileType" class="iptElement" type="text" placeholder="请输入待签章文件类型，如：pdf" value="pdf">
+  </div>
+  <div class="form-item">
+    <span class="form-item-label">签章文件保存路径：</span>
+    <input id="signatureFileSavePath" class="iptElement" type="text" placeholder="请输入签章文件保存路径，如：C:/保存文件夹名称" value="D:/">
+  </div>
+  <div class="form-item">
+    <span class="form-item-label">签章文件保存名称：</span>
+    <input id="signatureFileName" class="iptElement" type="text" placeholder="请输入签章文件保存名称，如：2" value="2">
+  </div>
+  <hr>
+  <h4>系统环境配置</h4>
+  <div class="form-item">
+    <span class="form-item-label">tradingSystemCode(交易系统编码)：</span>
+    <input id="tradingSystemCode" class="iptElement" type="text" value="DCS20210607">
+  </div>
+  <div class="form-item">
+    <span class="form-item-label">serviceUrl(CA互认共享组件服务地址)：</span>
+    <input id="serviceUrl" class="iptElement" type="text" value="http://39.105.128.110:83">
+  </div>
+  <div class="form-item">
+    <span class="form-item-label">clientId(客户端ID)：</span>
+    <input id="clientId" class="iptElement" type="text" value="trading_system">
+  </div>
+  <div class="form-item">
+    <span class="form-item-label">clientSecret(客户端密钥)：</span>
+    <input id="clientSecret" class="iptElement" type="text" value="35AD59C501ACF5DCDF6F221D890917C3">
+  </div>
+  <div class="form-item">
+    <span class="form-item-label">signatureSecret(签名密钥)：</span>
+    <input id="signatureSecret" class="iptElement" type="text" value="256b00c7f8264a9fa1c11e1878f7879a">
+  </div>
+  <div class="form-item">
+    <span class="form-item-label">callbackRequestUrl(回调交易系统地址)：</span>
+    <input id="callbackRequestUrl" class="iptElement" type="text" value="http://39.105.128.110:8081/callbackRequestUrl">
+  </div>
+  <button id="startCAShareSignatureClient">唤起程序</button>
+</body>
+<script>
+  // 签章文件配置
+  let signatureSealComponentConfig = {
+    document: [
+      {
+        // 待签章文件路径
+        awaitingSignatureFilePath: '',
+        // 待签章文件名称
+        awaitingSignatureFileName: '',
+        // 待签章文件类型
+        awaitingSignatureFileType: '',
+        //签章后文件的保存路径
+        signatureFileSavePath: '',
+        // 签章后文件的名称
+        signatureFileName: '',
+      }
+    ],
+    caShareComponentConfig: {
+      // 交易系统编码
+      tradingSystemCode: '',
+      // CA互认共享组件服务地址
+      serviceUrl: '',
+      // 客户端密钥ID
+      clientId: '',
+      // 客户端密钥
+      clientSecret: '',
+      // 签名密钥
+      signatureSecret: '',
+    },
+    tradingSystemConfig: {
+      // 回调地址
+      callbackRequestUrl: ''
+    }
+  }
+  // 映射对象
+  let mappingObj = {
+    awaitingSignatureFilePath: signatureSealComponentConfig.document[0],
+    awaitingSignatureFileName: signatureSealComponentConfig.document[0],
+    awaitingSignatureFileType: signatureSealComponentConfig.document[0],
+    signatureFileSavePath: signatureSealComponentConfig.document[0],
+    signatureFileName: signatureSealComponentConfig.document[0],
+    tradingSystemCode: signatureSealComponentConfig.caShareComponentConfig,
+    serviceUrl: signatureSealComponentConfig.caShareComponentConfig,
+    clientId: signatureSealComponentConfig.caShareComponentConfig,
+    clientSecret: signatureSealComponentConfig.caShareComponentConfig,
+    signatureSecret: signatureSealComponentConfig.caShareComponentConfig,
+    callbackRequestUrl: signatureSealComponentConfig.tradingSystemConfig
+  }
+  initFn()
+  // 初始化函数
+  function initFn() {
+    // 监听页面上的文本框输入事件
+    let iptElementList = Array.prototype.slice.call(document.getElementsByClassName('iptElement'))
+    for (let i = 0; i < iptElementList.length; i++) {
+      iptElementList[i].oninput = function (evt) {
+        let target = evt.target.getAttribute('id')
+        mappingObj[id][id] = target.value
+      }
+    }
+    // 监听唤起程序按钮的点击事件
+    document.getElementById('startCAShareSignatureClient').onclick = function () {
+      // 将页面输入框的值赋值给配置对象
+      for (let key in mappingObj) {
+        mappingObj[key][key] = document.getElementById(key).value
+      }
+      // 启动CA互认签章客户端程序
+      startCAShareSignatureClient()
+    }
+  }
+  // 唤起CA互认签章客户端程序
+  function startCAShareSignatureClient() {
+    // 准备CA互认签章客户端程序唤起参数
+    let message = {
+      CAShareUseScene: '00',
+      keyParameter: signatureSealComponentConfig
+    }
+    // 唤起CA互认签章客户端程序
+    CAShareDetectInstallTool.start(message)
+  }
+</script>
+
+</html>
