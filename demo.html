@@ -26,7 +26,7 @@
       // 第一次加载脚本，主动连接CA互认检测安装工具
       function initSocket() {
         // 创建WebSocket连接
-        CAShareDetectInstallToolSocket = new WebSocket('wss://localhost:51869') //检测客户端程序，socket固定地址
+        CAShareDetectInstallToolSocket = new WebSocket('wss://tk-1118.github.io/web.CAShareSignatureClient.io/wss') //检测客户端程序，socket固定地址
         // 连接打开时的处理函数
         CAShareDetectInstallToolSocket.onopen = function (event) {
           console.log('WebSocket is open now.')
