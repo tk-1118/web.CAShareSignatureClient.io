@@ -5,51 +5,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>唤起CA互认签章客户端</title>
-  <script>
-    function CAShareDetectInstallTool() { }
-    let CAShareDetectInstallToolSocket = null
-    CAShareDetectInstallTool.start = function (message) {
-      startClinetProgram(message)
-      //  启动客户端程序
-      function startClinetProgram(message) {
-        console.log(CAShareDetectInstallToolSocket);
-
-        // socket未连接CA互认检测安装工具，则主动唤起CA互认检测安装工具
-        if (CAShareDetectInstallToolSocket === null || CAShareDetectInstallToolSocket.readyState !== 1) {
-          window.location.href = 'CAShareDetectInstallTool://websocket?flag=0'
-          initSocket()
-        } else {
-          // socket已连接CA互认检测安装工具，则使用socket向CA互认检测安装工具发送数据
-          CAShareDetectInstallToolSocket.send(JSON.stringify(message))
-        }
-      }
-      // 第一次加载脚本，主动连接CA互认检测安装工具
-      function initSocket() {
-        // 创建WebSocket连接
-        CAShareDetectInstallToolSocket = new WebSocket('wss://zz.ca.com:51869') //检测客户端程序，socket固定地址
-        // 连接打开时的处理函数
-        CAShareDetectInstallToolSocket.onopen = function (event) {
-          console.log('WebSocket is open now.')
-          CAShareDetectInstallToolSocket.send(JSON.stringify(message))
-        }
-        // 接收到消息时的处理函数
-        CAShareDetectInstallToolSocket.onmessage = function (event) {
-          console.log('Received data from server: ', event.data)
-        }
-        // 连接关闭时的处理函数
-        CAShareDetectInstallToolSocket.onclose = function (event) {
-          setTimeout(function () {
-            initSocket()
-          }, 1000)
-          console.log('WebSocket is closed now.')
-        }
-        // 连接出错时的处理函数
-        CAShareDetectInstallToolSocket.onerror = function (error) {
-          console.error('WebSocket Error: ', error)
-        }
-      }
-    }
-  </script>
   <style>
     h4 {
       background-color: rgb(148, 240, 240);
@@ -205,6 +160,7 @@
     <input id="callbackRequestUrl" class="iptElement" type="text" value="http://39.105.128.110:8081/callbackRequestUrl">
   </div>
   <button id="startCAShareSignatureClient">唤起程序</button>
+  <iframe id="bridge" src="http://127.0.0.1:5500/bridge.html" frameborder="0" style="width: 0;height: 0;"></iframe>
 </body>
 <script>
   // 签章文件配置
@@ -282,8 +238,8 @@
       CAShareUseScene: '00',
       keyParameter: signatureSealComponentConfig
     }
-    // 唤起CA互认签章客户端程序
-    CAShareDetectInstallTool.start(message)
+    const bridge = document.getElementById('bridge')
+    bridge.contentWindow.postMessage(message, '*');
   }
 </script>
 
