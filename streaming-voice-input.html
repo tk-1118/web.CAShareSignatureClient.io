@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>流式语音输入</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .voice-input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        #voiceInput {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            min-height: 100px;
+        }
+        #startButton, #stopButton {
+            padding: 10px 15px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #startButton {
+            background-color: #4CAF50;
+        }
+        #startButton:hover {
+            background-color: #45a049;
+        }
+        #stopButton {
+            background-color: #f44336;
+        }
+        #stopButton:hover {
+            background-color: #d32f2f;
+        }
+        #startButton:disabled, #stopButton:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .listening {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .warning {
+            background-color: #fff8e1;
+            color: #ff8f00;
+        }
+        .interim {
+            color: #666;
+            font-style: italic;
+        }
+        h3 {
+            margin-top: 30px;
+        }
+        ul {
+            line-height: 1.6;
+        }
+        .model-info {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>流式语音输入示例</h1>
+    
+    <div class="voice-input-container">
+        <textarea id="voiceInput" placeholder="点击开始按钮进行语音输入..."></textarea>
+    </div>
+    
+    <div>
+        <button id="startButton">开始语音识别</button>
+        <button id="stopButton" disabled>停止语音识别</button>
+    </div>
+    
+    <div id="status" class="status" style="display: none;"></div>
+    
+    <h3>使用说明:</h3>
+    <ol>
+        <li>点击"开始语音识别"按钮开始语音输入</li>
+        <li>浏览器可能会询问是否允许使用麦克风，请点击允许</li>
+        <li>开始说话，语音将被实时转换为文字</li>
+        <li>点击"停止语音识别"按钮结束识别</li>
+    </ol>
+
+    <h3>Web Speech API 流式识别演示:</h3>
+    <p>以下是使用浏览器原生 Web Speech API 实现的流式语音识别功能：</p>
+
+    <script>
+        // 检查浏览器是否支持语音识别
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        if (!SpeechRecognition) {
+            document.getElementById('status').innerHTML = '您的浏览器不支持语音识别功能。<br>请使用 <a href="https://www.google.com/chrome/" target="_blank">Chrome</a> 或 <a href="https://www.microsoft.com/edge" target="_blank">Edge</a> 浏览器。';
+            document.getElementById('status').className = 'status error';
+            document.getElementById('status').style.display = 'block';
+            document.getElementById('startButton').disabled = true;
+            document.getElementById('stopButton').disabled = true;
+        } else {
+            const recognition = new SpeechRecognition();
+            const voiceInput = document.getElementById('voiceInput');
+            const startButton = document.getElementById('startButton');
+            const stopButton = document.getElementById('stopButton');
+            const status = document.getElementById('status');
+            
+            // 设置语音识别参数
+            recognition.lang = 'zh-CN';
+            recognition.continuous = true;     // 持续识别
+            recognition.interimResults = true; // 返回中间结果
+            
+            // 开始语音识别
+            startButton.addEventListener('click', () => {
+                try {
+                    voiceInput.value = ''; // 清空输入框
+                    recognition.start();
+                    status.textContent = '正在聆听...请开始说话';
+                    status.className = 'status listening';
+                    status.style.display = 'block';
+                    startButton.disabled = true;
+                    stopButton.disabled = false;
+                } catch (error) {
+                    console.error('语音识别启动失败:', error);
+                    status.textContent = '语音识别启动失败: ' + error.message;
+                    status.className = 'status error';
+                    status.style.display = 'block';
+                }
+            });
+            
+            // 停止语音识别
+            stopButton.addEventListener('click', () => {
+                recognition.stop();
+                status.textContent = '语音识别已停止';
+                status.className = 'status success';
+                status.style.display = 'block';
+                startButton.disabled = false;
+                stopButton.disabled = true;
+            });
+            
+            // 语音识别中间结果处理（流式）
+            recognition.onresult = (event) => {
+                console.log('语音识别结果事件:', event);
+                
+                // 清空输入框中之前的结果
+                let finalTranscript = '';
+                let interimTranscript = '';
+                
+                // 处理最终结果和中间结果
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript;
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+                
+                // 更新输入框内容
+                voiceInput.value = voiceInput.value.slice(0, voiceInput.value.length - interimTranscript.length) + finalTranscript + interimTranscript;
+                
+                // 滚动到底部
+                voiceInput.scrollTop = voiceInput.scrollHeight;
+                
+                // 显示状态
+                if (interimTranscript) {
+                    status.textContent = '正在识别中...';
+                    status.className = 'status listening';
+                } else {
+                    status.textContent = '识别完成一段';
+                    status.className = 'status success';
+                }
+            };
+            
+            // 语音识别结束
+            recognition.onend = () => {
+                console.log('语音识别结束');
+                startButton.disabled = false;
+                stopButton.disabled = true;
+                if (status.className !== 'status error') {
+                    status.textContent = '语音识别已停止';
+                    status.className = 'status success';
+                }
+            };
+            
+            // 语音识别错误处理
+            recognition.onerror = (event) => {
+                console.error('语音识别错误:', event);
+                let errorMessage = '语音识别错误: ';
+                
+                switch (event.error) {
+                    case 'no-speech':
+                        errorMessage += '未检测到语音，请重试';
+                        break;
+                    case 'audio-capture':
+                        errorMessage += '未检测到麦克风设备';
+                        break;
+                    case 'not-allowed':
+                    case 'not-allowedError':
+                        errorMessage += '麦克风访问被拒绝，请允许浏览器使用麦克风';
+                        break;
+                    default:
+                        errorMessage += event.error;
+                }
+                
+                status.textContent = errorMessage;
+                status.className = 'status error';
+                status.style.display = 'block';
+                startButton.disabled = false;
+                stopButton.disabled = true;
+            };
+        }
+    </script>
+</body>
+</html>
