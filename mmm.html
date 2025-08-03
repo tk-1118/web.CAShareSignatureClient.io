@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+</body>
+<script>
+    navigator.mediaDevices.getUserMedia({ audio: true })
+     .then(stream => {
+       // 成功获取权限，可以关闭流
+       stream.getTracks().forEach(track => track.stop());
+       // 然后再次调用enumerateDevices来获取设备列表
+       navigator.mediaDevices.enumerateDevices().then(devices => {
+         const audioInput = devices.find(device => device.kind === 'audioinput');
+         if (audioInput) {
+           console.log('检测到麦克风设备:', audioInput.label);
+         } else {
+           console.log('未检测到麦克风设备');
+         }
+       });
+     })
+     .catch(err => {
+       console.error('获取麦克风权限失败:', err);
+     });
+</script>
+</html>
