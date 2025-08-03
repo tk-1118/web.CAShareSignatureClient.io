@@ -167,7 +167,7 @@
             recognition.onresult = (event) => {
                 console.log('语音识别结果事件:', event);
                 
-                // 清空输入框中之前的结果
+                // 初始化 transcript 变量
                 let finalTranscript = '';
                 let interimTranscript = '';
                 
@@ -181,8 +181,19 @@
                     }
                 }
                 
-                // 更新输入框内容
-                voiceInput.value = voiceInput.value.slice(0, voiceInput.value.length - interimTranscript.length) + finalTranscript + interimTranscript;
+                // 修复文字重复拼接问题
+                // 我们需要跟踪已处理的结果索引，只添加新的内容
+                if (event.results.length > 0) {
+                    // 清空输入框中之前的结果并重新构建
+                    let newTranscript = '';
+                    
+                    // 重新构建整个文本内容，避免重复拼接
+                    for (let i = 0; i < event.results.length; i++) {
+                        newTranscript += event.results[i][0].transcript;
+                    }
+                    
+                    voiceInput.value = newTranscript;
+                }
                 
                 // 滚动到底部
                 voiceInput.scrollTop = voiceInput.scrollHeight;
